@@ -1,5 +1,6 @@
 import bpy
 from pathlib import Path
+from bpy.app.handlers import persistent
 
 bl_info = {
     "name": "Taremin Outliner Sync Active",
@@ -15,6 +16,16 @@ bl_info = {
 }
 
 owner = object()
+
+
+@persistent
+def load_handler(*args, **kwargs):
+    scene = bpy.context.scene
+    if not hasattr(scene, "taremin_osa"):
+        return
+
+    settings = scene.taremin_osa
+    settings.update_is_active(bpy.context)
 
 
 def outliner_show_active(*args):
@@ -92,6 +103,7 @@ def register():
     bpy.types.Scene.taremin_osa = bpy.props.PointerProperty(
         type=TAREMIN_OUTLINER_SYNC_ACTIVE_Props
     )
+    bpy.app.handlers.load_post.append(load_handler)
 
 
 def unregister():
@@ -104,6 +116,7 @@ def unregister():
     bpy.context.scene.taremin_osa.on_unregister()
     unsubscribe()
     del bpy.types.Scene.taremin_osa
+    bpy.app.handlers.load_post.remove(load_handler)
     Path(__file__).touch()
 
 
